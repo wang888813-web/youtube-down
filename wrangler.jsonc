@@ -7,5 +7,10 @@
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS"
+  },
+  "vars": {
+    "MEOWLOAD_API_KEY": "947-hq7z81nugzw2",
+    "AI_BASE_URL": "https://api.deepseek.com/v1",
+    "AI_MODEL": "deepseek-chat"
   }
 }
