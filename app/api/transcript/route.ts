@@ -1,28 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { exec } from "child_process";
-import { promisify } from "util";
-import { existsSync, unlinkSync, readFileSync } from "fs";
-
-const execAsync = promisify(exec);
-
-function parseJson3(raw: string): { time: string; text: string }[] {
-  try {
-    const data = JSON.parse(raw);
-    const events = data.events || [];
-    const lines: { time: string; text: string }[] = [];
-    for (const e of events) {
-      const segs = e.segs || [];
-      const text = segs.map((s: { utf8?: string }) => s.utf8 || "").join("").trim();
-      if (!text || text === "\n") continue;
-      const ms = e.tStartMs || 0;
-      const time = `${Math.floor(ms / 60000)}:${String(Math.floor((ms % 60000) / 1000)).padStart(2, "0")}`;
-      lines.push({ time, text });
-    }
-    return lines;
-  } catch {
-    return [];
-  }
-}
 
 function parseVtt(raw: string): { time: string; text: string }[] {
   const lines: { time: string; text: string }[] = [];
@@ -39,7 +15,29 @@ function parseVtt(raw: string): { time: string; text: string }[] {
     const text = rows
       .filter((r) => !r.includes("-->") && !r.match(/^\d+$/) && r.trim())
       .join(" ")
-      .replace(/<[^>]+>/g, "") // strip HTML tags
+      .replace(/<[^>]+>/g, "")
+      .trim();
+    if (text) lines.push({ time, text });
+  }
+  return lines;
+}
+
+function parseSrt(raw: string): { time: string; text: string }[] {
+  const lines: { time: string; text: string }[] = [];
+  const blocks = raw.split(/\n\n+/);
+  for (const block of blocks) {
+    const rows = block.trim().split("\n");
+    const timeLine = rows.find((r) => r.includes("-->"));
+    if (!timeLine) continue;
+    const timeMatch = timeLine.match(/(\d+):(\d+):(\d+)/);
+    if (!timeMatch) continue;
+    const h = parseInt(timeMatch[1]), m = parseInt(timeMatch[2]), s = parseInt(timeMatch[3]);
+    const totalMin = h * 60 + m;
+    const time = `${totalMin}:${String(s).padStart(2, "0")}`;
+    const text = rows
+      .filter((r) => !r.includes("-->") && !r.match(/^\d+$/) && r.trim())
+      .join(" ")
+      .replace(/<[^>]+>/g, "")
       .trim();
     if (text) lines.push({ time, text });
   }
@@ -53,7 +51,6 @@ async function aiSummarize(title: string, transcript: { time: string; text: stri
 
   if (!apiKey) throw new Error("AI_API_KEY not configured");
 
-  // Limit transcript to ~3000 chars to stay within token budget
   const fullText = transcript
     .map((t) => `[${t.time}] ${t.text}`)
     .join("\n")
@@ -99,72 +96,66 @@ Respond in JSON format exactly like this:
   return JSON.parse(content) as { summary: string; keyPoints: string[] };
 }
 
-function extractVideoId(url: string): string | null {
-  try {
-    const u = new URL(url);
-    if (u.hostname.includes("youtube.com")) {
-      return u.searchParams.get("v") || u.pathname.split("/").pop() || null;
-    }
-    if (u.hostname === "youtu.be") return u.pathname.slice(1);
-  } catch {}
-  return null;
-}
-
 export async function GET(req: NextRequest) {
   const url = req.nextUrl.searchParams.get("url");
   if (!url) return NextResponse.json({ error: "URL is required" }, { status: 400 });
 
-  const videoId = extractVideoId(url);
-  if (!videoId) return NextResponse.json({ error: "Invalid YouTube URL" }, { status: 400 });
+  const apiKey = process.env.MEOWLOAD_API_KEY;
+  if (!apiKey) return NextResponse.json({ error: "API key not configured" }, { status: 500 });
 
-  const outPath = `/tmp/transcript-${videoId}`;
+  // Step 1: fetch subtitle list from meowload
+  const subRes = await fetch("https://api.meowload.net/openapi/extract/subtitles", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": apiKey,
+      "accept-language": "zh",
+    },
+    body: JSON.stringify({ url }),
+  });
 
-  try {
-    // Clean up any old subtitle files
-    [`${outPath}.en.json3`, `${outPath}.zh-Hans.json3`, `${outPath}.zh.json3`].forEach((f) => { try { if (existsSync(f)) unlinkSync(f); } catch {} });
-
-    // Get title + subtitles: try json3 first, fallback to vtt
-    const { stdout: titleOut } = await execAsync(
-      `PATH=$PATH:/root/.deno/bin yt-dlp --cookies /root/yt-cookies.txt --js-runtimes deno --remote-components ejs:github --write-auto-sub --sub-lang "en,zh-Hans,zh,zh-TW" --skip-download --sub-format json3 --print "%(title)s" -o "${outPath}" "${url}" 2>/dev/null`,
-      { timeout: 120000 }
-    );
-    const title = titleOut.trim() || `YouTube Video (${videoId})`;
-
-    // Find subtitle file — json3 preferred, vtt fallback
-    const subCandidates = [
-      `${outPath}.en.json3`, `${outPath}.zh-Hans.json3`, `${outPath}.zh.json3`, `${outPath}.zh-TW.json3`,
-      `${outPath}.en.vtt`, `${outPath}.zh-TW.vtt`, `${outPath}.zh-Hans.vtt`, `${outPath}.zh.vtt`,
-    ];
-    let subFile = subCandidates.find((f) => existsSync(f));
-
-    // If no json3 found, retry with vtt format
-    if (!subFile) {
-      await execAsync(
-        `PATH=$PATH:/root/.deno/bin yt-dlp --cookies /root/yt-cookies.txt --js-runtimes deno --remote-components ejs:github --write-auto-sub --sub-lang "en,zh-Hans,zh,zh-TW" --skip-download --sub-format vtt -o "${outPath}" "${url}" 2>/dev/null`,
-        { timeout: 120000 }
-      ).catch(() => {});
-      subFile = subCandidates.find((f) => existsSync(f));
-    }
-
-    if (!subFile) {
-      return NextResponse.json({ error: "No subtitles available for this video. The video may not have captions enabled." }, { status: 404 });
-    }
-
-    const raw = readFileSync(subFile, "utf-8");
-    const transcript = subFile.endsWith(".vtt") ? parseVtt(raw) : parseJson3(raw);
-    subCandidates.forEach((f) => { try { if (existsSync(f)) unlinkSync(f); } catch {} });
-
-    if (transcript.length === 0) {
-      return NextResponse.json({ error: "Could not parse subtitles for this video." }, { status: 404 });
-    }
-
-    // AI summary
-    const { summary, keyPoints } = await aiSummarize(title, transcript);
-
-    return NextResponse.json({ title, summary, keyPoints, transcript });
-  } catch (err) {
-    [`${outPath}.en.json3`, `${outPath}.zh-Hans.json3`, `${outPath}.zh.json3`].forEach((f) => { try { if (existsSync(f)) unlinkSync(f); } catch {} });
-    const msg = err instanceof Error ? err.message : "Failed to process video";
-    return NextResponse.json({ error: msg }, { status: 500 });
+  if (!subRes.ok) {
+    const err = await subRes.json().catch(() => ({}));
+    return NextResponse.json({ error: err.message || "Failed to fetch subtitles" }, { status: subRes.status });
   }
+
+  const subData = await subRes.json();
+  const title: string = subData.text || "YouTube Video";
+  const subtitles: { language_tag: string; urls: { url: string; format: string }[] }[] = subData.subtitles || [];
+
+  if (!subtitles.length) {
+    return NextResponse.json({ error: "No subtitles available for this video." }, { status: 404 });
+  }
+
+  // Step 2: pick best subtitle — prefer en, fallback to first available
+  const preferred = ["en", "zh-CN", "zh-TW", "zh"];
+  const picked =
+    preferred.map((tag) => subtitles.find((s) => s.language_tag === tag)).find(Boolean) || subtitles[0];
+
+  // prefer vtt, fallback srt
+  const vttUrl = picked.urls.find((u) => u.format === "vtt")?.url;
+  const srtUrl = picked.urls.find((u) => u.format === "srt")?.url;
+  const subUrl = vttUrl || srtUrl;
+  const subFormat = vttUrl ? "vtt" : "srt";
+
+  if (!subUrl) {
+    return NextResponse.json({ error: "No downloadable subtitle URL found." }, { status: 404 });
+  }
+
+  // Step 3: download and parse subtitle file
+  const rawRes = await fetch(subUrl);
+  if (!rawRes.ok) {
+    return NextResponse.json({ error: "Failed to download subtitle file." }, { status: 500 });
+  }
+  const raw = await rawRes.text();
+  const transcript = subFormat === "vtt" ? parseVtt(raw) : parseSrt(raw);
+
+  if (!transcript.length) {
+    return NextResponse.json({ error: "Could not parse subtitles for this video." }, { status: 404 });
+  }
+
+  // Step 4: AI summary
+  const { summary, keyPoints } = await aiSummarize(title, transcript);
+
+  return NextResponse.json({ title, summary, keyPoints, transcript });
 }
