@@ -3,6 +3,17 @@ export default function PrivacyPage() {
     <div className="max-w-3xl mx-auto px-4 py-16">
       <h1 className="text-3xl font-bold mb-8">Privacy Policy</h1>
       <div className="space-y-6 text-gray-300">
+        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5 space-y-2">
+          {[
+            "YTTools does NOT host, store, or cache any videos or files.",
+            "We do not collect personal data, track users, or share information.",
+            "Our service is for personal use only.",
+          ].map((item, i) => (
+            <p key={i} className="flex gap-2 text-sm">
+              <span className="text-green-400 shrink-0">✓</span>{item}
+            </p>
+          ))}
+        </div>
         <section>
           <h2 className="text-xl font-semibold text-white mb-3">1. Information We Collect</h2>
           <p>We collect minimal data: YouTube URLs you submit and basic usage analytics (page views, feature usage). We do not collect personal information unless you create an account.</p>

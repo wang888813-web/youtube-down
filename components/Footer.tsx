@@ -14,6 +14,8 @@ export default function Footer() {
           <Link href="/" className="hover:text-white transition-colors">AI Script</Link>
           <Link href="/downloader" className="hover:text-white transition-colors">Downloader</Link>
           <Link href="/pricing" className="hover:text-white transition-colors">Pricing</Link>
+          <Link href="/about" className="hover:text-white transition-colors">About</Link>
+          <Link href="/disclaimer" className="hover:text-white transition-colors">Disclaimer</Link>
           <Link href="/privacy" className="hover:text-white transition-colors">Privacy</Link>
           <Link href="/terms" className="hover:text-white transition-colors">Terms</Link>
         </div>
