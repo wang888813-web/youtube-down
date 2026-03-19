@@ -4,7 +4,7 @@ import { Youtube, Menu, X } from "lucide-react";
 import { useState } from "react";
 
 const navLinks = [
-  { href: "/", label: "AI Script" },
+  { href: "/script", label: "AI Script" },
   { href: "/downloader", label: "Downloader" },
   { href: "/pricing", label: "Pricing" },
 ];

@@ -6,7 +6,7 @@ const tools = [
     icon: <FileText className="w-8 h-8 text-red-400" />,
     title: "AI Script Generator",
     desc: "Extract transcript and generate AI summary, key points from any YouTube video.",
-    href: "/",
+    href: "/script",
     cta: "Try Now",
   },
   {
