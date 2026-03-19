@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
+export const runtime = "edge";
+
 export const maxDuration = 300;
 
 const ALLOWED_HOSTS = ["googlevideo.com", "youtube.com", "ytimg.com", "ggpht.com"];
