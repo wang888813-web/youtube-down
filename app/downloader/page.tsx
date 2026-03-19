@@ -84,30 +84,13 @@ function DownloaderContent() {
     }
   };
 
-  const handleDownloadUrl = async (quality: string, key: string) => {
+  const handleDownloadUrl = (videoUrl: string, quality: string, key: string) => {
     setDownloading(key);
-    setError("");
     try {
-      const startRes = await fetch(`/api/download?url=${encodeURIComponent(url)}&format=mp4&quality=${quality}`);
-      const startData = await startRes.json();
-      if (!startRes.ok || !startData.jobId) { setError(startData.error || "Download failed"); return; }
-      const jobId = startData.jobId;
-      for (let i = 0; i < 120; i++) {
-        await new Promise((r) => setTimeout(r, 3000));
-        const fileRes = await fetch(`/api/download?job=${jobId}`);
-        const ct = fileRes.headers.get("Content-Type") || "";
-        if (ct.includes("video") || fileRes.headers.get("Content-Disposition")) {
-          const blob = await fileRes.blob();
-          const a = document.createElement("a");
-          a.href = URL.createObjectURL(blob);
-          a.download = `video-${quality}.mp4`;
-          a.click();
-          return;
-        }
-        const pollData = await fileRes.json().catch(() => ({}));
-        if (pollData.status === "error") { setError(pollData.error || "Download failed"); return; }
-      }
-      setError("Download timed out.");
+      const a = document.createElement("a");
+      a.href = `/api/proxy?url=${encodeURIComponent(videoUrl)}`;
+      a.download = `video-${quality}.mp4`;
+      a.click();
     } catch {
       setError("Download failed. Please try again.");
     } finally {
@@ -133,31 +116,14 @@ function DownloaderContent() {
     }
   };
 
-  const handleMp3Download = async () => {
-    if (!url.trim()) return;
+  const handleMp3Download = () => {
+    if (!parseResult?.audio_url) { setError("No audio URL available. Please analyze the video first."); return; }
     setDownloading("mp3");
-    setError("");
     try {
-      const startRes = await fetch(`/api/download?url=${encodeURIComponent(url)}&format=mp3`);
-      const startData = await startRes.json();
-      if (!startRes.ok || !startData.jobId) { setError(startData.error || "Download failed"); return; }
-      const jobId = startData.jobId;
-      for (let i = 0; i < 120; i++) {
-        await new Promise((r) => setTimeout(r, 3000));
-        const fileRes = await fetch(`/api/download?job=${jobId}`);
-        const ct = fileRes.headers.get("Content-Type") || "";
-        if (ct.includes("audio") || fileRes.headers.get("Content-Disposition")) {
-          const blob = await fileRes.blob();
-          const a = document.createElement("a");
-          a.href = URL.createObjectURL(blob);
-          a.download = "audio.mp3";
-          a.click();
-          return;
-        }
-        const pollData = await fileRes.json().catch(() => ({}));
-        if (pollData.status === "error") { setError(pollData.error || "Download failed"); return; }
-      }
-      setError("Download timed out.");
+      const a = document.createElement("a");
+      a.href = `/api/proxy?url=${encodeURIComponent(parseResult.audio_url)}`;
+      a.download = "audio.mp3";
+      a.click();
     } catch {
       setError("Download failed. Please try again.");
     } finally {
@@ -211,11 +177,11 @@ function DownloaderContent() {
                 onKeyDown={(e) => e.key === "Enter" && (tab === "mp4" ? handleParse() : handleMp3Download())}
                 placeholder="Paste YouTube or Shorts URL here..."
                 className="flex-1 bg-gray-800 border border-gray-700 rounded-xl px-5 py-3.5 text-white placeholder-gray-500 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500/30 transition-all text-sm" />
-              <button onClick={tab === "mp4" ? handleParse : handleMp3Download}
-                disabled={parsing || downloading === "mp3"}
+              <button onClick={tab === "mp4" ? handleParse : (parseResult ? handleMp3Download : handleParse)}
+                disabled={parsing || !!downloading}
                 className="flex items-center gap-2 bg-red-600 hover:bg-red-500 disabled:opacity-40 disabled:cursor-not-allowed px-7 py-3.5 rounded-xl font-semibold transition-all shadow-lg shadow-red-600/20 whitespace-nowrap text-sm">
                 {(parsing || downloading === "mp3") ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-                {parsing ? "Analyzing..." : downloading === "mp3" ? "Downloading..." : tab === "mp4" ? "Analyze" : "Download MP3"}
+                {parsing ? "Analyzing..." : downloading === "mp3" ? "Downloading..." : tab === "mp3" && !parseResult ? "Analyze" : tab === "mp3" ? "Download MP3" : "Analyze"}
               </button>
             </div>
 
@@ -224,6 +190,28 @@ function DownloaderContent() {
             )}
 
             {/* Parse Result */}
+            {parseResult && tab === "mp3" && (
+              <div className="mt-4 border border-gray-700 rounded-2xl overflow-hidden">
+                <div className="flex gap-4 p-4 bg-gray-800/50">
+                  {parseResult.preview_url && (
+                    <img src={parseResult.preview_url} alt="thumbnail" className="w-32 h-20 object-cover rounded-lg shrink-0" />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white font-medium text-sm line-clamp-2 mb-1">{parseResult.title}</p>
+                    <p className="text-gray-500 text-xs mb-3">Ready to download as MP3</p>
+                    <button
+                      onClick={handleMp3Download}
+                      disabled={!!downloading}
+                      className="flex items-center gap-2 bg-red-600 hover:bg-red-500 disabled:opacity-40 px-4 py-2 rounded-xl text-sm font-semibold transition-all"
+                    >
+                      {downloading === "mp3" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Music className="w-4 h-4" />}
+                      {downloading === "mp3" ? "Downloading..." : "Download MP3"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {parseResult && tab === "mp4" && (
               <div className="mt-4 border border-gray-700 rounded-2xl overflow-hidden">
                 {/* Video info */}
@@ -258,7 +246,7 @@ function DownloaderContent() {
                     return (
                       <button
                         key={f.quality}
-                        onClick={() => handleDownloadUrl(f.quality_note, key)}
+                        onClick={() => handleDownloadUrl(f.video_url, f.quality_note, key)}
                         disabled={!!downloading}
                         className="w-full flex items-center justify-between bg-gray-800 hover:bg-gray-700 disabled:opacity-50 border border-gray-700 hover:border-gray-500 rounded-xl px-4 py-3 transition-all group"
                       >
