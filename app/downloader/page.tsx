@@ -229,15 +229,15 @@ function DownloaderContent() {
 
       {/* Disclaimer */}
       <div className="max-w-4xl mx-auto px-4 pb-16">
-        <div className="border border-gray-800/60 rounded-2xl px-6 py-4 grid grid-cols-2 gap-2">
+        <div className="border border-gray-700 rounded-2xl px-6 py-5 grid grid-cols-2 gap-3 bg-gray-900/40">
           {[
             "This tool is only for downloading videos you own or have authorized rights to download.",
             "We respect the copyright laws and DMCA. Please do not download copyrighted content.",
             "We do not host, store, or cache any videos from YouTube.",
             "We are not affiliated with YouTube, Google, or any content providers.",
           ].map((item, i) => (
-            <p key={i} className="text-gray-600 text-xs flex gap-2">
-              <span className="text-gray-700 shrink-0">{i + 1}.</span>
+            <p key={i} className="text-gray-400 text-xs flex gap-2">
+              <span className="text-red-500 shrink-0 font-bold">{i + 1}.</span>
               {item}
             </p>
           ))}
