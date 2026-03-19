@@ -7,7 +7,26 @@ import { existsSync, unlinkSync, readdirSync } from "fs";
 export const maxDuration = 300;
 
 // In-memory job store (resets on server restart, fine for MVP)
-const jobs = new Map<string, { status: "pending" | "done" | "error"; file?: string; ext?: string; error?: string }>();
+const jobs = new Map<string, { status: "pending" | "done" | "error"; file?: string; ext?: string; error?: string; createdAt: number }>();
+
+// Clean up stale /tmp/ytdl-* files older than 30 minutes every 10 minutes
+setInterval(() => {
+  const now = Date.now();
+  try {
+    const files = readdirSync(os.tmpdir()).filter((f) => f.startsWith("ytdl-"));
+    for (const f of files) {
+      const fp = path.join(os.tmpdir(), f);
+      try {
+        const { mtimeMs } = require("fs").statSync(fp);
+        if (now - mtimeMs > 30 * 60 * 1000) unlinkSync(fp);
+      } catch {}
+    }
+  } catch {}
+  // Also clean stale jobs from memory
+  for (const [id, job] of jobs.entries()) {
+    if (now - job.createdAt > 30 * 60 * 1000) jobs.delete(id);
+  }
+}, 10 * 60 * 1000);
 
 function runYtDlp(args: string[]): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -84,7 +103,7 @@ export async function GET(req: NextRequest) {
       ? ["-x", "--audio-format", "mp3", "--audio-quality", "0", ...commonArgs]
       : ["-f", "bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best", "--merge-output-format", "mp4", ...commonArgs];
 
-  jobs.set(newJobId, { status: "pending" });
+  jobs.set(newJobId, { status: "pending", createdAt: Date.now() });
 
   // Run in background
   runYtDlp(args).then(() => {
@@ -92,12 +111,12 @@ export async function GET(req: NextRequest) {
     if (files.length) {
       const filePath = path.join(os.tmpdir(), files[0]);
       const ext = path.extname(files[0]).slice(1);
-      jobs.set(newJobId, { status: "done", file: filePath, ext });
+      jobs.set(newJobId, { status: "done", file: filePath, ext, createdAt: Date.now() });
     } else {
-      jobs.set(newJobId, { status: "error", error: "Output file not found" });
+      jobs.set(newJobId, { status: "error", error: "Output file not found", createdAt: Date.now() });
     }
   }).catch((err) => {
-    jobs.set(newJobId, { status: "error", error: err.message });
+    jobs.set(newJobId, { status: "error", error: err.message, createdAt: Date.now() });
   });
 
   return NextResponse.json({ jobId: newJobId });
