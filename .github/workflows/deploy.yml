@@ -1,0 +1,25 @@
+name: Deploy to Server
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 43.156.153.223
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /root/.openclaw/workspace/youtube-down
+            git pull origin main
+            npm install --production=false
+            npm run build
+            kill $(ss -tlnp | grep ':3000' | grep -oP 'pid=\K[0-9]+') 2>/dev/null || true
+            sleep 1
+            nohup npm run start -- --port 3000 > /tmp/ytdown-prod.log 2>&1 &
+            echo "Deployed at $(date)"
