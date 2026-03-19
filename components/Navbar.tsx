@@ -16,7 +16,7 @@ export default function Navbar() {
       <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2 font-bold text-lg">
           <Youtube className="text-red-500 w-6 h-6" />
-          <span>YTTools</span>
+          <span className="text-white font-extrabold tracking-tight bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">YTTools</span>
         </Link>
         <div className="hidden md:flex items-center gap-6 text-sm text-gray-300">
           {navLinks.map((l) => (

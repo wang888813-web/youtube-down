@@ -15,9 +15,9 @@ const relatedTools = [
   },
   {
     icon: <Mic className="w-6 h-6 text-blue-400" />,
-    title: "MP3 Audio Extractor",
+    title: "MP3 Extractor",
     desc: "Extract high-quality MP3 audio from YouTube videos instantly.",
-    href: "/downloader?tab=mp3",
+    href: "/downloader#mp3",
     tag: "Audio",
     tagColor: "bg-blue-500/10 text-blue-400",
   },
@@ -25,7 +25,7 @@ const relatedTools = [
     icon: <Youtube className="w-6 h-6 text-pink-400" />,
     title: "Shorts Downloader",
     desc: "Download YouTube Shorts as MP4 without watermark. 720p & 1080p.",
-    href: "/downloader",
+    href: "/downloader#mp4",
     tag: "Video",
     tagColor: "bg-pink-500/10 text-pink-400",
   },
@@ -137,7 +137,7 @@ function DownloaderContent() {
       {/* Related Tools */}
       <div className="mt-12">
         <h2 className="text-lg font-semibold mb-4 text-gray-200">More Tools</h2>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-4 gap-3">
           {relatedTools.map((tool) => (
             <Link
               key={tool.title}
