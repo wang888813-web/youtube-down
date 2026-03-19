@@ -35,6 +35,8 @@ export async function GET(req: NextRequest) {
     "--cookies", "/root/yt-cookies.txt",
     "--js-runtimes", "deno",
     "--remote-components", "ejs:github",
+    "--concurrent-fragments", "8",   // 并行下载分片，大幅提速
+    "--no-part",                      // 避免 .part 临时文件残留
     "-o", outTemplate,
     url,
   ];
@@ -42,7 +44,7 @@ export async function GET(req: NextRequest) {
   const args =
     format === "mp3"
       ? ["-x", "--audio-format", "mp3", "--audio-quality", "0", ...commonArgs]
-      : ["-f", "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best", "--merge-output-format", "mp4", ...commonArgs];
+      : ["-f", "bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best", "--merge-output-format", "mp4", ...commonArgs];
 
   try {
     await runYtDlp(args);

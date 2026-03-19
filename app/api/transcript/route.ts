@@ -101,18 +101,12 @@ export async function GET(req: NextRequest) {
   try {
     if (existsSync(subFile)) unlinkSync(subFile);
 
-    // Get video title
+    // Get title + subtitles in one yt-dlp call
     const { stdout: titleOut } = await execAsync(
-      `PATH=$PATH:/root/.deno/bin yt-dlp --cookies /root/yt-cookies.txt --js-runtimes deno --remote-components ejs:github --get-title "${url}" 2>/dev/null`,
-      { timeout: 60000 }
-    );
-    const title = titleOut.trim() || `YouTube Video (${videoId})`;
-
-    // Extract subtitles
-    await execAsync(
-      `PATH=$PATH:/root/.deno/bin yt-dlp --cookies /root/yt-cookies.txt --js-runtimes deno --remote-components ejs:github --write-auto-sub --sub-lang en --skip-download --sub-format json3 -o "${outPath}" "${url}" 2>/dev/null`,
+      `PATH=$PATH:/root/.deno/bin yt-dlp --cookies /root/yt-cookies.txt --js-runtimes deno --remote-components ejs:github --write-auto-sub --sub-lang en --skip-download --sub-format json3 --print "%(title)s" -o "${outPath}" "${url}" 2>/dev/null`,
       { timeout: 120000 }
     );
+    const title = titleOut.trim() || `YouTube Video (${videoId})`;
 
     if (!existsSync(subFile)) {
       return NextResponse.json({ error: "No subtitles available for this video." }, { status: 404 });
