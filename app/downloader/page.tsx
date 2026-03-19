@@ -67,6 +67,12 @@ function DownloaderContent() {
             ))}
           </div>
         )}
+        {loading && (
+          <div className="flex items-start gap-2 bg-yellow-500/10 border border-yellow-500/30 rounded-xl px-4 py-3 text-yellow-400 text-sm">
+            <span className="shrink-0">⏳</span>
+            <span>Processing your request... Large videos may take 1–2 minutes. Please keep this page open.</span>
+          </div>
+        )}
         {error && <p className="text-red-400 text-sm">{error}</p>}
         <button
           onClick={handleDownload}
@@ -77,7 +83,19 @@ function DownloaderContent() {
           {loading ? "Processing..." : `Download ${tab.toUpperCase()}`}
         </button>
       </div>
-      <p className="text-gray-600 text-xs mt-4 text-center">For personal use only. Respect copyright laws.</p>
+      <div className="mt-6 bg-gray-900/50 border border-gray-800 rounded-xl px-5 py-4 space-y-2">
+        {[
+          "This tool is only for downloading videos you own or have authorized rights to download.",
+          "We respect the copyright laws and DMCA. Please do not download copyrighted content.",
+          "We do not host, store, or cache any videos from YouTube.",
+          "We are not affiliated with YouTube, Google, or any content providers.",
+        ].map((item, i) => (
+          <p key={i} className="text-gray-500 text-xs flex gap-2">
+            <span className="text-gray-600 shrink-0">{i + 1}.</span>
+            {item}
+          </p>
+        ))}
+      </div>
     </div>
   );
 }
