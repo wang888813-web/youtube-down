@@ -138,7 +138,7 @@ function DownloaderContent() {
               />
               <button
                 onClick={handleDownload}
-                disabled={loading || !url.trim()}
+                disabled={loading}
                 className="flex items-center gap-2 bg-red-600 hover:bg-red-500 disabled:opacity-40 disabled:cursor-not-allowed px-7 py-3.5 rounded-xl font-semibold transition-all shadow-lg shadow-red-600/20 whitespace-nowrap text-sm"
               >
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
