@@ -24,6 +24,28 @@ function parseJson3(raw: string): { time: string; text: string }[] {
   }
 }
 
+function parseVtt(raw: string): { time: string; text: string }[] {
+  const lines: { time: string; text: string }[] = [];
+  const blocks = raw.split(/\n\n+/);
+  for (const block of blocks) {
+    const rows = block.trim().split("\n");
+    const timeLine = rows.find((r) => r.includes("-->"));
+    if (!timeLine) continue;
+    const timeMatch = timeLine.match(/^(\d+):(\d+):(\d+)/);
+    if (!timeMatch) continue;
+    const h = parseInt(timeMatch[1]), m = parseInt(timeMatch[2]), s = parseInt(timeMatch[3]);
+    const totalMin = h * 60 + m;
+    const time = `${totalMin}:${String(s).padStart(2, "0")}`;
+    const text = rows
+      .filter((r) => !r.includes("-->") && !r.match(/^\d+$/) && r.trim())
+      .join(" ")
+      .replace(/<[^>]+>/g, "") // strip HTML tags
+      .trim();
+    if (text) lines.push({ time, text });
+  }
+  return lines;
+}
+
 async function aiSummarize(title: string, transcript: { time: string; text: string }[]) {
   const apiKey = process.env.AI_API_KEY;
   const baseUrl = process.env.AI_BASE_URL || "https://api.openai.com/v1";
@@ -101,24 +123,36 @@ export async function GET(req: NextRequest) {
     // Clean up any old subtitle files
     [`${outPath}.en.json3`, `${outPath}.zh-Hans.json3`, `${outPath}.zh.json3`].forEach((f) => { try { if (existsSync(f)) unlinkSync(f); } catch {} });
 
-    // Get title + subtitles in one yt-dlp call, try en first then zh
+    // Get title + subtitles: try json3 first, fallback to vtt
     const { stdout: titleOut } = await execAsync(
-      `PATH=$PATH:/root/.deno/bin yt-dlp --cookies /root/yt-cookies.txt --js-runtimes deno --remote-components ejs:github --write-auto-sub --sub-lang "en,zh-Hans,zh" --skip-download --sub-format json3 --print "%(title)s" -o "${outPath}" "${url}" 2>/dev/null`,
+      `PATH=$PATH:/root/.deno/bin yt-dlp --cookies /root/yt-cookies.txt --js-runtimes deno --remote-components ejs:github --write-auto-sub --sub-lang "en,zh-Hans,zh,zh-TW" --skip-download --sub-format json3 --print "%(title)s" -o "${outPath}" "${url}" 2>/dev/null`,
       { timeout: 120000 }
     );
     const title = titleOut.trim() || `YouTube Video (${videoId})`;
 
-    // Find subtitle file (en, zh-Hans, zh)
-    const subCandidates = [`${outPath}.en.json3`, `${outPath}.zh-Hans.json3`, `${outPath}.zh.json3`];
-    const subFile = subCandidates.find((f) => existsSync(f));
+    // Find subtitle file — json3 preferred, vtt fallback
+    const subCandidates = [
+      `${outPath}.en.json3`, `${outPath}.zh-Hans.json3`, `${outPath}.zh.json3`, `${outPath}.zh-TW.json3`,
+      `${outPath}.en.vtt`, `${outPath}.zh-TW.vtt`, `${outPath}.zh-Hans.vtt`, `${outPath}.zh.vtt`,
+    ];
+    let subFile = subCandidates.find((f) => existsSync(f));
+
+    // If no json3 found, retry with vtt format
+    if (!subFile) {
+      await execAsync(
+        `PATH=$PATH:/root/.deno/bin yt-dlp --cookies /root/yt-cookies.txt --js-runtimes deno --remote-components ejs:github --write-auto-sub --sub-lang "en,zh-Hans,zh,zh-TW" --skip-download --sub-format vtt -o "${outPath}" "${url}" 2>/dev/null`,
+        { timeout: 120000 }
+      ).catch(() => {});
+      subFile = subCandidates.find((f) => existsSync(f));
+    }
 
     if (!subFile) {
       return NextResponse.json({ error: "No subtitles available for this video. The video may not have captions enabled." }, { status: 404 });
     }
 
     const raw = readFileSync(subFile, "utf-8");
-    const transcript = parseJson3(raw);
-    if (existsSync(subFile)) unlinkSync(subFile);
+    const transcript = subFile.endsWith(".vtt") ? parseVtt(raw) : parseJson3(raw);
+    subCandidates.forEach((f) => { try { if (existsSync(f)) unlinkSync(f); } catch {} });
 
     if (transcript.length === 0) {
       return NextResponse.json({ error: "Could not parse subtitles for this video." }, { status: 404 });
