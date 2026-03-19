@@ -84,18 +84,50 @@ function DownloaderContent() {
     }
   };
 
-  const handleDownloadUrl = async (downloadUrl: string, filename: string, key: string) => {
+  const handleDownloadUrl = async (quality: string, key: string) => {
     setDownloading(key);
+    setError("");
     try {
-      const res = await fetch(`/api/proxy?url=${encodeURIComponent(downloadUrl)}`);
-      if (!res.ok) { setError("Download failed"); return; }
+      const startRes = await fetch(`/api/download?url=${encodeURIComponent(url)}&format=mp4&quality=${quality}`);
+      const startData = await startRes.json();
+      if (!startRes.ok || !startData.jobId) { setError(startData.error || "Download failed"); return; }
+      const jobId = startData.jobId;
+      for (let i = 0; i < 120; i++) {
+        await new Promise((r) => setTimeout(r, 3000));
+        const fileRes = await fetch(`/api/download?job=${jobId}`);
+        const ct = fileRes.headers.get("Content-Type") || "";
+        if (ct.includes("video") || fileRes.headers.get("Content-Disposition")) {
+          const blob = await fileRes.blob();
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(blob);
+          a.download = `video-${quality}.mp4`;
+          a.click();
+          return;
+        }
+        const pollData = await fileRes.json().catch(() => ({}));
+        if (pollData.status === "error") { setError(pollData.error || "Download failed"); return; }
+      }
+      setError("Download timed out.");
+    } catch {
+      setError("Download failed. Please try again.");
+    } finally {
+      setDownloading(null);
+    }
+  };
+
+  const handleThumbDownload = async () => {
+    if (!parseResult?.preview_url) return;
+    setDownloading("thumb");
+    try {
+      const res = await fetch(`/api/proxy?url=${encodeURIComponent(parseResult.preview_url)}`);
+      if (!res.ok) { setError("Failed to download thumbnail"); return; }
       const blob = await res.blob();
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
-      a.download = filename;
+      a.download = "thumbnail.jpg";
       a.click();
     } catch {
-      setError("Download failed. Please try again.");
+      setError("Failed to download thumbnail.");
     } finally {
       setDownloading(null);
     }
@@ -200,7 +232,7 @@ function DownloaderContent() {
                     <div className="relative shrink-0">
                       <img src={parseResult.preview_url} alt="thumbnail" className="w-32 h-20 object-cover rounded-lg" />
                       <button
-                        onClick={() => handleDownloadUrl(parseResult.preview_url, "thumbnail.jpg", "thumb")}
+                        onClick={() => handleThumbDownload()}
                         className="absolute bottom-1 right-1 bg-black/70 hover:bg-black/90 rounded-md p-1 transition-colors"
                         title="Download thumbnail"
                       >
@@ -226,7 +258,7 @@ function DownloaderContent() {
                     return (
                       <button
                         key={f.quality}
-                        onClick={() => handleDownloadUrl(f.video_url, `video-${f.quality_note}.mp4`, key)}
+                        onClick={() => handleDownloadUrl(f.quality_note, key)}
                         disabled={!!downloading}
                         className="w-full flex items-center justify-between bg-gray-800 hover:bg-gray-700 disabled:opacity-50 border border-gray-700 hover:border-gray-500 rounded-xl px-4 py-3 transition-all group"
                       >
@@ -260,7 +292,7 @@ function DownloaderContent() {
                   {/* MP3 audio download if available */}
                   {parseResult.audio_url && (
                     <button
-                      onClick={() => handleDownloadUrl(parseResult.audio_url!, "audio.m4a", "audio")}
+                      onClick={() => handleMp3Download()}
                       disabled={!!downloading}
                       className="w-full flex items-center justify-between bg-gray-800 hover:bg-gray-700 disabled:opacity-50 border border-gray-700 hover:border-gray-500 rounded-xl px-4 py-3 transition-all group"
                     >
