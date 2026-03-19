@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 
-export const runtime = "edge";
 
 function parseVtt(raw: string): { time: string; text: string }[] {
   const lines: { time: string; text: string }[] = [];
