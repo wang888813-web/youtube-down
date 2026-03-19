@@ -145,14 +145,16 @@ function DownloaderContent() {
 
       {/* How to Use */}
       <div className="mt-12">
-        <h2 className="text-lg font-semibold mb-6 text-gray-200">How to Use</h2>
-        <div className="grid grid-cols-4 gap-4">
+        <h2 className="text-lg font-semibold mb-8 text-gray-200">How to Use</h2>
+        <div className="relative flex items-start justify-between gap-4">
+          {/* connecting line */}
+          <div className="absolute top-5 left-[calc(12.5%)] right-[calc(12.5%)] h-px bg-gray-700 z-0" />
           {steps.map((s) => (
-            <div key={s.step} className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
-              <div className="w-9 h-9 rounded-xl bg-red-600/10 border border-red-500/20 flex items-center justify-center mb-4">
+            <div key={s.step} className="relative z-10 flex flex-col items-center text-center flex-1 gap-3">
+              <div className="w-10 h-10 rounded-full bg-gray-900 border-2 border-red-500 flex items-center justify-center shrink-0">
                 <span className="text-red-400 text-xs font-bold">{s.step}</span>
               </div>
-              <h3 className="font-semibold text-sm text-white mb-2">{s.title}</h3>
+              <h3 className="font-semibold text-sm text-white">{s.title}</h3>
               <p className="text-gray-500 text-xs leading-relaxed">{s.desc}</p>
             </div>
           ))}
