@@ -76,17 +76,33 @@ function ZhDownloaderContent() {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch(`/api/download?url=${encodeURIComponent(url)}&format=${tab}&quality=${quality}`);
-      if (!res.ok) {
-        const d = await res.json();
-        setError(d.error || "下载失败");
+      const startRes = await fetch(`/api/download?url=${encodeURIComponent(url)}&format=${tab}&quality=${quality}`);
+      const startData = await startRes.json();
+      if (!startRes.ok || !startData.jobId) {
+        setError(startData.error || "下载失败");
         return;
       }
-      const blob = await res.blob();
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = tab === "mp4" ? "video.mp4" : "audio.mp3";
-      a.click();
+
+      const jobId = startData.jobId;
+      for (let i = 0; i < 120; i++) {
+        await new Promise((r) => setTimeout(r, 3000));
+        const fileRes = await fetch(`/api/download?job=${jobId}`);
+        const ct = fileRes.headers.get("Content-Type") || "";
+        if (ct.includes("video") || ct.includes("audio") || fileRes.headers.get("Content-Disposition")) {
+          const blob = await fileRes.blob();
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(blob);
+          a.download = tab === "mp4" ? "video.mp4" : "audio.mp3";
+          a.click();
+          return;
+        }
+        const pollData = await fileRes.json().catch(() => ({}));
+        if (pollData.status === "error") {
+          setError(pollData.error || "下载失败");
+          return;
+        }
+      }
+      setError("下载超时，请重试。");
     } catch {
       setError("下载失败，请重试。");
     } finally {
