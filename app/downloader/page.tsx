@@ -188,13 +188,6 @@ function DownloaderContent() {
           </div>
         </div>
       </div>
-
-          {/* Lang switch */}
-          <div className="flex justify-center mt-4">
-            <Link href="/zh" className="text-xs text-gray-500 hover:text-gray-300 transition-colors">
-              🌐 切换中文版
-            </Link>
-          </div>
       <div className="max-w-4xl mx-auto px-4 py-16">
         <div className="text-center mb-10">
           <h2 className="text-2xl font-bold mb-2">How to Use</h2>
