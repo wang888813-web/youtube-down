@@ -15,7 +15,7 @@ export default function Features() {
           {features.map((f) => (
             <div key={f.title} className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
               <div className="mb-3">{f.icon}</div>
-              <h3 className="font-semibold mb-2">{f.title}</h3>
+              <h3 className="font-semibold mb-2 bg-gradient-to-r from-red-400 to-orange-400 bg-clip-text text-transparent">{f.title}</h3>
               <p className="text-gray-400 text-sm">{f.desc}</p>
             </div>
           ))}
