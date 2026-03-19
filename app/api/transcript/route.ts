@@ -24,36 +24,57 @@ function parseJson3(raw: string): { time: string; text: string }[] {
   }
 }
 
-function generateSummary(transcript: { time: string; text: string }[], title: string) {
-  const fullText = transcript.map((t) => t.text).join(" ").replace(/\[.*?\]/g, "").trim();
-  const sentences = fullText.split(/[.!?]+/).map((s) => s.trim()).filter((s) => s.length > 20);
+async function aiSummarize(title: string, transcript: { time: string; text: string }[]) {
+  const apiKey = process.env.AI_API_KEY;
+  const baseUrl = process.env.AI_BASE_URL || "https://api.openai.com/v1";
+  const model = process.env.AI_MODEL || "gpt-4o-mini";
 
-  // Pick first, middle, last meaningful sentences as summary
-  const picked: string[] = [];
-  if (sentences[0]) picked.push(sentences[0]);
-  if (sentences[Math.floor(sentences.length / 2)]) picked.push(sentences[Math.floor(sentences.length / 2)]);
-  if (sentences[sentences.length - 1] && sentences.length > 2) picked.push(sentences[sentences.length - 1]);
+  if (!apiKey) throw new Error("AI_API_KEY not configured");
 
-  const summary = picked.join(". ") + (picked.length ? "." : "");
+  // Limit transcript to ~3000 chars to stay within token budget
+  const fullText = transcript
+    .map((t) => `[${t.time}] ${t.text}`)
+    .join("\n")
+    .slice(0, 3000);
 
-  // Key points: pick sentences with keywords
-  const keywords = ["important", "key", "main", "first", "second", "third", "finally", "remember", "note", "tip", "step", "must", "should", "need", "best"];
-  const keyPoints = sentences
-    .filter((s) => keywords.some((k) => s.toLowerCase().includes(k)))
-    .slice(0, 5);
+  const prompt = `You are a helpful assistant. Given the following YouTube video transcript, provide:
+1. A concise summary (2-3 sentences) of what the video is about
+2. 5 key points from the video
 
-  if (keyPoints.length < 3) {
-    // fallback: evenly spaced sentences
-    const step = Math.max(1, Math.floor(sentences.length / 5));
-    for (let i = 0; i < sentences.length && keyPoints.length < 5; i += step) {
-      if (!keyPoints.includes(sentences[i])) keyPoints.push(sentences[i]);
-    }
+Video title: ${title}
+
+Transcript:
+${fullText}
+
+Respond in JSON format exactly like this:
+{
+  "summary": "...",
+  "keyPoints": ["point 1", "point 2", "point 3", "point 4", "point 5"]
+}`;
+
+  const res = await fetch(`${baseUrl}/chat/completions`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model,
+      messages: [{ role: "user", content: prompt }],
+      max_tokens: 600,
+      temperature: 0.3,
+      response_format: { type: "json_object" },
+    }),
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`AI API error: ${err}`);
   }
 
-  return {
-    summary: summary || `This video titled "${title}" contains ${transcript.length} segments of content.`,
-    keyPoints: keyPoints.slice(0, 5),
-  };
+  const data = await res.json();
+  const content = data.choices?.[0]?.message?.content || "{}";
+  return JSON.parse(content) as { summary: string; keyPoints: string[] };
 }
 
 function extractVideoId(url: string): string | null {
@@ -78,7 +99,6 @@ export async function GET(req: NextRequest) {
   const subFile = `${outPath}.en.json3`;
 
   try {
-    // Clean up old file
     if (existsSync(subFile)) unlinkSync(subFile);
 
     // Get video title
@@ -100,15 +120,14 @@ export async function GET(req: NextRequest) {
 
     const raw = readFileSync(subFile, "utf-8");
     const transcript = parseJson3(raw);
+    if (existsSync(subFile)) unlinkSync(subFile);
 
     if (transcript.length === 0) {
       return NextResponse.json({ error: "Could not parse subtitles for this video." }, { status: 404 });
     }
 
-    const { summary, keyPoints } = generateSummary(transcript, title);
-
-    // Cleanup
-    if (existsSync(subFile)) unlinkSync(subFile);
+    // AI summary
+    const { summary, keyPoints } = await aiSummarize(title, transcript);
 
     return NextResponse.json({ title, summary, keyPoints, transcript });
   } catch (err) {
