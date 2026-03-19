@@ -9,7 +9,7 @@ const relatedTools = [
     icon: <FileText className="w-6 h-6 text-red-400" />,
     title: "AI Script Generator",
     desc: "Extract transcript and generate AI summary from any YouTube video.",
-    href: "/",
+    href: "/script",
     tag: "AI",
     tagColor: "bg-red-500/10 text-red-400",
   },
@@ -33,9 +33,32 @@ const relatedTools = [
     icon: <Scissors className="w-6 h-6 text-green-400" />,
     title: "Transcript Exporter",
     desc: "Get full timestamped transcript and export as .txt file.",
-    href: "/",
+    href: "/script",
     tag: "Text",
     tagColor: "bg-green-500/10 text-green-400",
+  },
+];
+
+const steps = [
+  {
+    step: "01",
+    title: "Copy the YouTube URL",
+    desc: "Go to YouTube, find the video or Shorts you want, and copy the URL from the address bar.",
+  },
+  {
+    step: "02",
+    title: "Paste & Choose Format",
+    desc: "Paste the URL into the input box above. Select MP4 for video or MP3 for audio-only.",
+  },
+  {
+    step: "03",
+    title: "Select Quality",
+    desc: "For MP4, choose your preferred resolution: 720p for smaller file size or 1080p for HD.",
+  },
+  {
+    step: "04",
+    title: "Click Download",
+    desc: "Hit the Download button and wait. Large videos may take 1–2 minutes to process.",
   },
 ];
 
@@ -72,7 +95,7 @@ function DownloaderContent() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-16">
+    <div className="max-w-4xl mx-auto px-4 py-16">
       <h1 className="text-3xl font-bold mb-2">YouTube Downloader</h1>
       <p className="text-gray-400 mb-8">Download Shorts as MP4 or extract MP3 audio.</p>
 
@@ -120,22 +143,24 @@ function DownloaderContent() {
         </button>
       </div>
 
-      <div className="mt-6 bg-gray-900/50 border border-gray-800 rounded-xl px-5 py-4 space-y-2">
-        {[
-          "This tool is only for downloading videos you own or have authorized rights to download.",
-          "We respect the copyright laws and DMCA. Please do not download copyrighted content.",
-          "We do not host, store, or cache any videos from YouTube.",
-          "We are not affiliated with YouTube, Google, or any content providers.",
-        ].map((item, i) => (
-          <p key={i} className="text-gray-500 text-xs flex gap-2">
-            <span className="text-gray-600 shrink-0">{i + 1}.</span>
-            {item}
-          </p>
-        ))}
+      {/* How to Use */}
+      <div className="mt-12">
+        <h2 className="text-lg font-semibold mb-6 text-gray-200">How to Use</h2>
+        <div className="grid grid-cols-4 gap-4">
+          {steps.map((s) => (
+            <div key={s.step} className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
+              <div className="w-9 h-9 rounded-xl bg-red-600/10 border border-red-500/20 flex items-center justify-center mb-4">
+                <span className="text-red-400 text-xs font-bold">{s.step}</span>
+              </div>
+              <h3 className="font-semibold text-sm text-white mb-2">{s.title}</h3>
+              <p className="text-gray-500 text-xs leading-relaxed">{s.desc}</p>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Related Tools */}
-      <div className="mt-12">
+      <div className="mt-10">
         <h2 className="text-lg font-semibold mb-4 text-gray-200">More Tools</h2>
         <div className="grid grid-cols-4 gap-3">
           {relatedTools.map((tool) => (
@@ -162,6 +187,21 @@ function DownloaderContent() {
             </Link>
           ))}
         </div>
+      </div>
+
+      {/* Disclaimer */}
+      <div className="mt-10 bg-gray-900/50 border border-gray-800 rounded-xl px-5 py-4 space-y-2">
+        {[
+          "This tool is only for downloading videos you own or have authorized rights to download.",
+          "We respect the copyright laws and DMCA. Please do not download copyrighted content.",
+          "We do not host, store, or cache any videos from YouTube.",
+          "We are not affiliated with YouTube, Google, or any content providers.",
+        ].map((item, i) => (
+          <p key={i} className="text-gray-500 text-xs flex gap-2">
+            <span className="text-gray-600 shrink-0">{i + 1}.</span>
+            {item}
+          </p>
+        ))}
       </div>
     </div>
   );
