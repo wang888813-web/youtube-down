@@ -106,7 +106,8 @@ function DownloaderContent() {
           </div>
 
           <h1 className="text-4xl md:text-5xl font-extrabold text-center mb-3 tracking-tight">
-            YouTube <span className="text-red-500">Downloader</span>
+            <span className="bg-gradient-to-r from-red-400 via-red-500 to-orange-400 bg-clip-text text-transparent">YouTube</span>{" "}
+            <span className="text-white">Downloader</span>
           </h1>
           <p className="text-gray-400 text-center text-lg mb-10">
             Download YouTube videos & Shorts as MP4 or extract MP3 audio — free, fast, no signup.
