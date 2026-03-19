@@ -181,16 +181,16 @@ function DownloaderContent() {
       <div className="max-w-4xl mx-auto px-4 py-16">
         <div className="text-center mb-10">
           <h2 className="text-2xl font-bold mb-2">How to Use</h2>
-          <p className="text-gray-500 text-sm">Download any YouTube video in 4 simple steps</p>
+          <p className="text-gray-500 text-sm">Download YouTube video & Shorts in 4 simple steps</p>
         </div>
         <div className="relative flex items-start justify-between gap-6">
           <div className="absolute top-5 left-[calc(12.5%)] right-[calc(12.5%)] h-px bg-gradient-to-r from-transparent via-gray-700 to-transparent" />
           {steps.map((s) => (
             <div key={s.step} className="relative z-10 flex flex-col items-center text-center flex-1 gap-3">
-              <div className="w-10 h-10 rounded-full bg-gray-950 border-2 border-red-500 flex items-center justify-center shadow-lg shadow-red-500/20">
-                <span className="text-red-400 text-xs font-bold">{s.step}</span>
+              <div className="w-10 h-10 rounded-full bg-red-600 flex items-center justify-center shadow-lg shadow-red-600/30">
+                <span className="text-white text-sm font-black">{s.step}</span>
               </div>
-              <h3 className="font-semibold text-sm text-white">{s.title}</h3>
+              <h3 className="font-bold text-sm text-white">{s.title}</h3>
               <p className="text-gray-500 text-xs leading-relaxed">{s.desc}</p>
             </div>
           ))}
