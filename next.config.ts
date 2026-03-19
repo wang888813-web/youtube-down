@@ -1,7 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  experimental: {
+    // Required for OpenNext Cloudflare adapter
+  },
 };
 
 export default nextConfig;
