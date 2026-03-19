@@ -29,7 +29,7 @@ export default function ZhScriptPage() {
             <Sparkles className="w-4 h-4" /> AI 驱动的 YouTube 工具
           </div>
           <h1 className="text-4xl md:text-5xl font-extrabold mb-6 leading-tight tracking-tight">
-            粘贴链接，<br />
+            <span className="text-white">粘贴链接，</span><br />
             <span className="bg-gradient-to-r from-red-400 to-orange-400 bg-clip-text text-transparent">30 秒获得 AI 摘要</span>
           </h1>
           <p className="text-gray-400 text-lg mb-10 max-w-xl mx-auto">
@@ -65,7 +65,7 @@ export default function ZhScriptPage() {
           ].map((t) => (
             <div key={t.title} className="bg-gray-900 border border-gray-800 rounded-2xl p-6 hover:border-gray-600 transition-colors">
               <div className="mb-4">{t.icon}</div>
-              <h3 className="font-semibold text-lg mb-2">{t.title}</h3>
+              <h3 className="font-semibold text-lg mb-2 bg-gradient-to-r from-red-400 to-orange-400 bg-clip-text text-transparent">{t.title}</h3>
               <p className="text-gray-400 text-sm mb-5">{t.desc}</p>
               <Link href={t.href} className="text-sm font-medium text-red-400 hover:text-red-300 transition-colors">{t.cta} →</Link>
             </div>
