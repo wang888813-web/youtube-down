@@ -10,6 +10,7 @@ const config = {
       queue: "dummy",
     },
   },
+  edgeExternals: ["node:crypto"],
   middleware: {
     external: true,
     override: {
