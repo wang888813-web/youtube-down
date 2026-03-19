@@ -13,7 +13,7 @@ const navLinksEn = [
 const navLinksZh = [
   { href: "/zh/script", label: "AI 脚本" },
   { href: "/zh", label: "下载器" },
-  { href: "/pricing", label: "定价" },
+  { href: "/zh/pricing", label: "定价" },
 ];
 
 export default function Navbar() {
