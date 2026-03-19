@@ -7,6 +7,7 @@ import Link from "next/link";
 const relatedTools = [
   {
     icon: <FileText className="w-5 h-5 text-red-400" />,
+    bg: "bg-red-500/15",
     title: "AI Script Generator",
     desc: "Extract transcript and generate AI summary from any YouTube video.",
     href: "/script",
@@ -15,6 +16,7 @@ const relatedTools = [
   },
   {
     icon: <Mic className="w-5 h-5 text-blue-400" />,
+    bg: "bg-blue-500/15",
     title: "MP3 Extractor",
     desc: "Extract high-quality MP3 audio from YouTube videos instantly.",
     href: "/downloader#mp3",
@@ -23,6 +25,7 @@ const relatedTools = [
   },
   {
     icon: <Youtube className="w-5 h-5 text-pink-400" />,
+    bg: "bg-pink-500/15",
     title: "Shorts Downloader",
     desc: "Download YouTube Shorts as MP4 without watermark.",
     href: "/downloader#mp4",
@@ -31,6 +34,7 @@ const relatedTools = [
   },
   {
     icon: <Scissors className="w-5 h-5 text-green-400" />,
+    bg: "bg-green-500/15",
     title: "Transcript Exporter",
     desc: "Get full timestamped transcript and export as .txt file.",
     href: "/script",
@@ -208,7 +212,7 @@ function DownloaderContent() {
               className="group bg-gray-900 border border-gray-800 hover:border-gray-600 rounded-2xl p-5 flex flex-col gap-3 transition-all hover:shadow-lg hover:-translate-y-0.5"
             >
               <div className="flex items-start justify-between">
-                <div className="w-10 h-10 rounded-xl bg-gray-800 flex items-center justify-center">
+                <div className={`w-10 h-10 rounded-xl ${tool.bg} flex items-center justify-center`}>
                   {tool.icon}
                 </div>
                 <span className={`text-xs font-medium px-2 py-0.5 rounded-full border ${tool.tagColor}`}>
