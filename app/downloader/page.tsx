@@ -190,7 +190,7 @@ function DownloaderContent() {
               <div className="w-10 h-10 rounded-full bg-red-600 flex items-center justify-center shadow-lg shadow-red-600/30">
                 <span className="text-white text-sm font-black">{s.step}</span>
               </div>
-              <h3 className="font-bold text-sm text-white">{s.title}</h3>
+              <h3 className="font-extrabold text-sm tracking-wide bg-gradient-to-r from-red-400 to-orange-400 bg-clip-text text-transparent">{s.title}</h3>
               <p className="text-gray-500 text-xs leading-relaxed">{s.desc}</p>
             </div>
           ))}
