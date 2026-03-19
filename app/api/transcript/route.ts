@@ -96,20 +96,24 @@ export async function GET(req: NextRequest) {
   if (!videoId) return NextResponse.json({ error: "Invalid YouTube URL" }, { status: 400 });
 
   const outPath = `/tmp/transcript-${videoId}`;
-  const subFile = `${outPath}.en.json3`;
 
   try {
-    if (existsSync(subFile)) unlinkSync(subFile);
+    // Clean up any old subtitle files
+    [`${outPath}.en.json3`, `${outPath}.zh-Hans.json3`, `${outPath}.zh.json3`].forEach((f) => { try { if (existsSync(f)) unlinkSync(f); } catch {} });
 
-    // Get title + subtitles in one yt-dlp call
+    // Get title + subtitles in one yt-dlp call, try en first then zh
     const { stdout: titleOut } = await execAsync(
-      `PATH=$PATH:/root/.deno/bin yt-dlp --cookies /root/yt-cookies.txt --js-runtimes deno --remote-components ejs:github --write-auto-sub --sub-lang en --skip-download --sub-format json3 --print "%(title)s" -o "${outPath}" "${url}" 2>/dev/null`,
+      `PATH=$PATH:/root/.deno/bin yt-dlp --cookies /root/yt-cookies.txt --js-runtimes deno --remote-components ejs:github --write-auto-sub --sub-lang "en,zh-Hans,zh" --skip-download --sub-format json3 --print "%(title)s" -o "${outPath}" "${url}" 2>/dev/null`,
       { timeout: 120000 }
     );
     const title = titleOut.trim() || `YouTube Video (${videoId})`;
 
-    if (!existsSync(subFile)) {
-      return NextResponse.json({ error: "No subtitles available for this video." }, { status: 404 });
+    // Find subtitle file (en, zh-Hans, zh)
+    const subCandidates = [`${outPath}.en.json3`, `${outPath}.zh-Hans.json3`, `${outPath}.zh.json3`];
+    const subFile = subCandidates.find((f) => existsSync(f));
+
+    if (!subFile) {
+      return NextResponse.json({ error: "No subtitles available for this video. The video may not have captions enabled." }, { status: 404 });
     }
 
     const raw = readFileSync(subFile, "utf-8");
@@ -125,7 +129,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ title, summary, keyPoints, transcript });
   } catch (err) {
-    if (existsSync(subFile)) unlinkSync(subFile);
+    [`${outPath}.en.json3`, `${outPath}.zh-Hans.json3`, `${outPath}.zh.json3`].forEach((f) => { try { if (existsSync(f)) unlinkSync(f); } catch {} });
     const msg = err instanceof Error ? err.message : "Failed to process video";
     return NextResponse.json({ error: msg }, { status: 500 });
   }
