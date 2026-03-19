@@ -1,5 +1,5 @@
 "use client";
-import { useState, Suspense } from "react";
+import { useState, Suspense, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { Download, Music, Loader2, FileText, Scissors, Mic, Youtube, ArrowRight, Shield, Zap, Star } from "lucide-react";
 import Link from "next/link";
@@ -19,7 +19,7 @@ const relatedTools = [
     bg: "bg-blue-500/15",
     title: "MP3 Extractor",
     desc: "Extract high-quality MP3 audio from YouTube videos instantly.",
-    href: "/downloader#mp3",
+    href: "/downloader?tab=mp3",
     tag: "Audio",
     tagColor: "bg-blue-500/10 text-blue-400 border-blue-500/20",
   },
@@ -28,7 +28,7 @@ const relatedTools = [
     bg: "bg-pink-500/15",
     title: "Shorts Downloader",
     desc: "Download YouTube Shorts as MP4 without watermark.",
-    href: "/downloader#mp4",
+    href: "/downloader?tab=mp4",
     tag: "Video",
     tagColor: "bg-pink-500/10 text-pink-400 border-pink-500/20",
   },
@@ -60,6 +60,13 @@ function DownloaderContent() {
   const params = useSearchParams();
   const defaultTab = params.get("tab") === "mp3" ? "mp3" : "mp4";
   const [tab, setTab] = useState<"mp4" | "mp3">(defaultTab);
+
+  // Sync tab when URL param changes (e.g. clicking More Tools cards)
+  useEffect(() => {
+    const t = params.get("tab");
+    if (t === "mp3") setTab("mp3");
+    else if (t === "mp4") setTab("mp4");
+  }, [params]);
   const [url, setUrl] = useState("");
   const [quality, setQuality] = useState("720p");
   const [loading, setLoading] = useState(false);
