@@ -1,12 +1,10 @@
 {
+  "/_not-found/page": "app/_not-found/page.js",
   "/api/parse/route": "app/api/parse/route.js",
   "/api/transcript/route": "app/api/transcript/route.js",
-  "/_not-found/page": "app/_not-found/page.js",
   "/favicon.ico/route": "app/favicon.ico/route.js",
   "/api/proxy/route": "app/api/proxy/route.js",
   "/about/page": "app/about/page.js",
-  "/downloader/page": "app/downloader/page.js",
-  "/page": "app/page.js",
   "/disclaimer/page": "app/disclaimer/page.js",
   "/pricing/page": "app/pricing/page.js",
   "/privacy/page": "app/privacy/page.js",
@@ -20,5 +18,7 @@
   "/zh/privacy/page": "app/zh/privacy/page.js",
   "/zh/result/page": "app/zh/result/page.js",
   "/zh/script/page": "app/zh/script/page.js",
-  "/zh/terms/page": "app/zh/terms/page.js"
+  "/zh/terms/page": "app/zh/terms/page.js",
+  "/downloader/page": "app/downloader/page.js",
+  "/page": "app/page.js"
 }

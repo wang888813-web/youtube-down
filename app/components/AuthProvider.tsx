@@ -3,7 +3,7 @@
 import { GoogleOAuthProvider, GoogleLogin, googleLogout, useGoogleLogin } from "@react-oauth/google";
 import { useState, useEffect, createContext, useContext } from "react";
 
-const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
+const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "879083991376-7307ufmjnjhrpicos3gabkpe6v0o1fdp.apps.googleusercontent.com";
 
 interface User {
   name: string;
