@@ -27,18 +27,12 @@ export async function POST(req: NextRequest) {
   const apiKey = process.env.MEOWLOAD_API_KEY;
   if (!apiKey) return NextResponse.json({ error: "API key not configured" }, { status: 500 });
 
-  // Forward user's real IP so meowload returns URLs bound to user's IP
-  const userIp = req.headers.get("cf-connecting-ip") ||
-    req.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
-    req.headers.get("x-real-ip") || "";
-
-  const res = await fetch("https://api.meowload.net/openapi/extract/post", {
+  const res = await fetch("https://api.yttoolsbox.com/parse", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       "x-api-key": apiKey,
       "accept-language": "zh",
-      ...(userIp ? { "x-forwarded-for": userIp, "x-real-ip": userIp } : {}),
     },
     body: JSON.stringify({ url }),
   });

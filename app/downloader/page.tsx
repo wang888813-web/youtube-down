@@ -88,7 +88,7 @@ function DownloaderContent() {
     setDownloading(key);
     try {
       const a = document.createElement("a");
-      a.href = `/api/proxy?url=${encodeURIComponent(videoUrl)}`;
+      a.href = `https://api.yttoolsbox.com/proxy?url=${encodeURIComponent(videoUrl)}`;
       a.download = `video-${quality}.mp4`;
       a.click();
     } catch {
@@ -121,7 +121,7 @@ function DownloaderContent() {
     setDownloading("mp3");
     try {
       const a = document.createElement("a");
-      a.href = `/api/proxy?url=${encodeURIComponent(parseResult.audio_url)}`;
+      a.href = `https://api.yttoolsbox.com/proxy?url=${encodeURIComponent(parseResult.audio_url)}`;
       a.download = "audio.mp3";
       a.click();
     } catch {
