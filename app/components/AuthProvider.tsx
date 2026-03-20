@@ -55,6 +55,17 @@ function AuthProviderInner({ children }: { children: React.ReactNode }) {
         };
         setUser(u);
         localStorage.setItem("yt_user", JSON.stringify(u));
+
+        // 注册/更新用户，携带推荐码（如有）
+        const ref = typeof window !== "undefined"
+          ? new URLSearchParams(window.location.search).get("ref") || localStorage.getItem("yt_ref")
+          : null;
+        if (ref) localStorage.setItem("yt_ref", ref); // 持久化推荐码
+        await fetch("/api/user", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ google_id: info.email, email: info.email, name: info.name, picture: info.picture, ref }),
+        });
       } catch (e) {
         console.error("Failed to get user info", e);
       } finally {

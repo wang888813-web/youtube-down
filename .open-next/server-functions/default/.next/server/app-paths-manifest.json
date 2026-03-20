@@ -1,6 +1,7 @@
 {
   "/_not-found/page": "app/_not-found/page.js",
   "/api/parse/route": "app/api/parse/route.js",
+  "/api/referral/route": "app/api/referral/route.js",
   "/api/transcript/route": "app/api/transcript/route.js",
   "/api/user/download/route": "app/api/user/download/route.js",
   "/api/user/route": "app/api/user/route.js",
@@ -18,11 +19,11 @@
   "/terms/page": "app/terms/page.js",
   "/zh/about/page": "app/zh/about/page.js",
   "/zh/disclaimer/page": "app/zh/disclaimer/page.js",
-  "/zh/pricing/page": "app/zh/pricing/page.js",
   "/zh/page": "app/zh/page.js",
+  "/zh/pricing/page": "app/zh/pricing/page.js",
   "/zh/privacy/page": "app/zh/privacy/page.js",
+  "/zh/profile/page": "app/zh/profile/page.js",
   "/zh/result/page": "app/zh/result/page.js",
   "/zh/script/page": "app/zh/script/page.js",
-  "/zh/profile/page": "app/zh/profile/page.js",
   "/zh/terms/page": "app/zh/terms/page.js"
 }
