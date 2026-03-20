@@ -11,6 +11,7 @@
   "vars": {
     "MEOWLOAD_API_KEY": "947-hq7z81nugzw2",
     "AI_BASE_URL": "https://api.deepseek.com/v1",
-    "AI_MODEL": "deepseek-chat"
+    "AI_MODEL": "deepseek-chat",
+    "NEXT_PUBLIC_GOOGLE_CLIENT_ID": "879083991376-7307ufmjnjhrpicos3gabkpe6v0o1fdp.apps.googleusercontent.com"
   }
 }
