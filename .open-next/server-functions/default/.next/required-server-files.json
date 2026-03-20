@@ -58,7 +58,16 @@
       "dangerouslyAllowSVG": false,
       "contentSecurityPolicy": "script-src 'none'; frame-src 'none'; sandbox;",
       "contentDispositionType": "attachment",
-      "remotePatterns": [],
+      "remotePatterns": [
+        {
+          "protocol": "https",
+          "hostname": "lh3.googleusercontent.com"
+        },
+        {
+          "protocol": "https",
+          "hostname": "i.ytimg.com"
+        }
+      ],
       "unoptimized": false
     },
     "devIndicators": {
