@@ -64,12 +64,13 @@ export async function GET(request: NextRequest) {
     "SELECT * FROM usage_stats WHERE user_id = ? AND date = ?"
   ).bind(user.id, today).first();
 
-  const history = await db.prepare(
-    "SELECT * FROM download_history WHERE user_id = ? ORDER BY created_at DESC LIMIT 20"
-  ).bind(user.id).all();
-
   const plan = (user.plan as keyof typeof PLAN_LIMITS) || "free";
   const limits = PLAN_LIMITS[plan] || PLAN_LIMITS.free;
+
+  const historyLimit = (plan === "pro" || plan === "unlimited") ? 50 : 20;
+  const history = await db.prepare(
+    `SELECT * FROM download_history WHERE user_id = ? ORDER BY created_at DESC LIMIT ${historyLimit}`
+  ).bind(user.id).all();
 
   return NextResponse.json({
     user,

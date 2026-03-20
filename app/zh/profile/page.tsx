@@ -265,7 +265,7 @@ export default function ZhProfilePage() {
         {/* 下载记录 Tab */}
         {tab === "history" && (
           <div className="bg-gray-900 border border-gray-800 rounded-3xl p-6">
-            <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">最近 20 条下载记录</h2>
+            <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">下载记录（最近 20 条）</h2>
             {history.length === 0 ? (
               <div className="text-center py-10">
                 <Film className="w-10 h-10 text-gray-700 mx-auto mb-3" />

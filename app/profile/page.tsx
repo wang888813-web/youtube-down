@@ -264,7 +264,7 @@ export default function ProfilePage() {
         {/* History Tab */}
         {tab === "history" && (
           <div className="bg-gray-900 border border-gray-800 rounded-3xl p-6">
-            <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Last 20 Downloads</h2>
+            <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Download History (last 20)</h2>
             {history.length === 0 ? (
               <div className="text-center py-10">
                 <Film className="w-10 h-10 text-gray-700 mx-auto mb-3" />
