@@ -23,11 +23,16 @@ export async function GET(req: NextRequest) {
   }
 
   try {
+    // Extract the ip= param from the URL and spoof it in headers
+    const parsedUrl = new URL(url);
+    const boundIp = parsedUrl.searchParams.get("ip") || "";
+
     const upstream = await fetch(url, {
       headers: {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
         "Referer": "https://www.youtube.com/",
         "Origin": "https://www.youtube.com",
+        ...(boundIp ? { "X-Forwarded-For": boundIp, "X-Real-IP": boundIp } : {}),
       },
     });
 
