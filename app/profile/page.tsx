@@ -66,8 +66,8 @@ export default function ProfilePage() {
 
         const res = await fetch(`/api/user?google_id=${encodeURIComponent(user.email)}`);
         const data = await res.json();
-        setUserData(data.user);
-        setUsage(data.today_usage);
+        if (data.user) setUserData(data.user);
+        if (data.today_usage) setUsage(data.today_usage);
         setHistory(data.history || []);
       } catch (e) {
         console.error(e);
