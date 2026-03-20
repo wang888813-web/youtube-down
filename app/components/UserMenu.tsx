@@ -1,18 +1,21 @@
 "use client";
 
 import { useAuth } from "./AuthProvider";
-import { LogIn, LogOut, Loader2, User } from "lucide-react";
+import { LogOut, Loader2, User } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export default function UserMenu() {
   const { user, login, logout, loading } = useAuth();
+  const pathname = usePathname();
+  const isZh = pathname.startsWith("/zh");
 
   if (loading) {
     return (
       <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-800 text-gray-400">
         <Loader2 className="w-4 h-4 animate-spin" />
-        <span className="text-sm">Signing in...</span>
+        <span className="text-sm">{isZh ? "登录中..." : "Signing in..."}</span>
       </div>
     );
   }
@@ -21,7 +24,7 @@ export default function UserMenu() {
     return (
       <div className="flex items-center gap-2">
         <Link
-          href="/profile"
+          href={isZh ? "/zh/profile" : "/profile"}
           className="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-gray-800 transition-all"
         >
           {user.picture ? (
@@ -42,6 +45,7 @@ export default function UserMenu() {
         <button
           onClick={logout}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-400 hover:text-white text-sm transition-all"
+          title={isZh ? "退出登录" : "Sign out"}
         >
           <LogOut className="w-3.5 h-3.5" />
         </button>
@@ -60,7 +64,7 @@ export default function UserMenu() {
         <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
         <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
       </svg>
-      Sign in with Google
+      {isZh ? "Google 登录" : "Sign in with Google"}
     </button>
   );
 }
