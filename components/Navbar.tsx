@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Youtube, Menu, X, Globe } from "lucide-react";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
+import UserMenu from "@/app/components/UserMenu";
 
 const navLinksEn = [
   { href: "/script", label: "AI Script" },
@@ -51,12 +52,7 @@ export default function Navbar() {
             <Globe className="w-3.5 h-3.5" />
             {isZh ? "English" : "中文"}
           </Link>
-          <button className="text-sm text-gray-400 hover:text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-all">
-            {isZh ? "登录" : "Login"}
-          </button>
-          <button className="text-sm bg-red-600 hover:bg-red-500 px-4 py-2 rounded-lg font-semibold transition-all shadow-lg shadow-red-600/20">
-            {isZh ? "免费注册" : "Sign Up Free"}
-          </button>
+          <UserMenu />
         </div>
 
         <button className="md:hidden p-2 rounded-lg hover:bg-gray-800 transition-colors" onClick={() => setOpen(!open)}>
@@ -74,9 +70,9 @@ export default function Navbar() {
           <Link href={langHref} className="flex items-center gap-2 text-gray-400 px-3 py-2 rounded-lg hover:bg-gray-800 transition-colors" onClick={() => setOpen(false)}>
             <Globe className="w-4 h-4" /> {isZh ? "Switch to English" : "切换中文"}
           </Link>
-          <button className="mt-2 bg-red-600 hover:bg-red-500 px-4 py-2.5 rounded-lg font-semibold w-full transition-colors">
-            {isZh ? "免费注册" : "Sign Up Free"}
-          </button>
+          <div className="mt-2">
+            <UserMenu />
+          </div>
         </div>
       )}
     </nav>
