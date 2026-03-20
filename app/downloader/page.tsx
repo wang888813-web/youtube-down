@@ -85,14 +85,9 @@ function DownloaderContent() {
   };
 
   const handleDownloadUrl = (videoUrl: string, quality: string, key: string) => {
+    window.open(videoUrl, "_blank");
     setDownloading(key);
-    try {
-      window.open(videoUrl, "_blank");
-    } catch {
-      setError("Download failed. Please try again.");
-    } finally {
-      setDownloading(null);
-    }
+    setTimeout(() => setDownloading(null), 2000);
   };
 
   const handleThumbDownload = async () => {
@@ -115,14 +110,9 @@ function DownloaderContent() {
 
   const handleMp3Download = () => {
     if (!parseResult?.audio_url) { setError("No audio URL available. Please analyze the video first."); return; }
+    window.open(parseResult.audio_url, "_blank");
     setDownloading("mp3");
-    try {
-      window.open(parseResult.audio_url, "_blank");
-    } catch {
-      setError("Download failed. Please try again.");
-    } finally {
-      setDownloading(null);
-    }
+    setTimeout(() => setDownloading(null), 2000);
   };
 
   // Filter formats: only show 720p and 1080p mp4
