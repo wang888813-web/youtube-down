@@ -87,7 +87,7 @@ function DownloaderContent() {
   const handleDownloadUrl = (videoUrl: string, quality: string, key: string) => {
     setDownloading(key);
     try {
-      window.open(`https://api.yttoolsbox.com/proxy?url=${encodeURIComponent(videoUrl)}`, "_blank");
+      window.open(videoUrl, "_blank");
     } catch {
       setError("Download failed. Please try again.");
     } finally {
@@ -117,7 +117,7 @@ function DownloaderContent() {
     if (!parseResult?.audio_url) { setError("No audio URL available. Please analyze the video first."); return; }
     setDownloading("mp3");
     try {
-      window.open(`https://api.yttoolsbox.com/proxy?url=${encodeURIComponent(parseResult.audio_url)}`, "_blank");
+      window.open(parseResult.audio_url, "_blank");
     } catch {
       setError("Download failed. Please try again.");
     } finally {
