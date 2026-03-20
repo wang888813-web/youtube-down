@@ -13,5 +13,12 @@
     "AI_BASE_URL": "https://api.deepseek.com/v1",
     "AI_MODEL": "deepseek-chat",
     "NEXT_PUBLIC_GOOGLE_CLIENT_ID": "879083991376-7307ufmjnjhrpicos3gabkpe6v0o1fdp.apps.googleusercontent.com"
-  }
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "yttools-db",
+      "database_id": "f1c2009b-55d5-4578-a914-1febd6597465"
+    }
+  ]
 }

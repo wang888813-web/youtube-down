@@ -1,8 +1,9 @@
 "use client";
 
 import { useAuth } from "./AuthProvider";
-import { LogIn, LogOut, Loader2 } from "lucide-react";
+import { LogIn, LogOut, Loader2, User } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
 export default function UserMenu() {
   const { user, login, logout, loading } = useAuth();
@@ -18,25 +19,31 @@ export default function UserMenu() {
 
   if (user) {
     return (
-      <div className="flex items-center gap-3">
-        <div className="flex items-center gap-2">
-          {user.picture && (
+      <div className="flex items-center gap-2">
+        <Link
+          href="/profile"
+          className="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-gray-800 transition-all"
+        >
+          {user.picture ? (
             <Image
               src={user.picture}
               alt={user.name}
-              width={32}
-              height={32}
+              width={28}
+              height={28}
               className="rounded-full border border-gray-600"
             />
+          ) : (
+            <div className="w-7 h-7 bg-gray-700 rounded-full flex items-center justify-center">
+              <User className="w-4 h-4 text-gray-400" />
+            </div>
           )}
-          <span className="text-sm text-gray-300 hidden sm:block">{user.name}</span>
-        </div>
+          <span className="text-sm text-gray-300 hidden sm:block max-w-[100px] truncate">{user.name}</span>
+        </Link>
         <button
           onClick={logout}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-400 hover:text-white text-sm transition-all"
         >
           <LogOut className="w-3.5 h-3.5" />
-          <span className="hidden sm:block">Sign out</span>
         </button>
       </div>
     );
