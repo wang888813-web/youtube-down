@@ -52,7 +52,6 @@ const PLANS = [
       { text: "去广告体验", ok: true },
       { text: "优先处理队列", ok: true },
       { text: "邮件支持（48h）", ok: true },
-      { text: "API 访问权限", ok: false },
     ],
     cta: "立即升级 Pro",
     ctaHref: "#",

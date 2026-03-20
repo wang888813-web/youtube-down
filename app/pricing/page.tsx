@@ -52,7 +52,6 @@ const PLANS = [
       { text: "Ad-free experience", ok: true },
       { text: "Priority processing", ok: true },
       { text: "Email support (48h)", ok: true },
-      { text: "API access", ok: false },
     ],
     cta: "Start Pro",
     ctaHref: "#",
