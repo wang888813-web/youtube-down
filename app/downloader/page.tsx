@@ -87,7 +87,10 @@ function DownloaderContent() {
   const handleDownloadUrl = (videoUrl: string, quality: string, key: string) => {
     setDownloading(key);
     try {
-      window.open(videoUrl, "_blank");
+      const a = document.createElement("a");
+      a.href = `/api/proxy?url=${encodeURIComponent(videoUrl)}`;
+      a.download = `video-${quality}.mp4`;
+      a.click();
     } catch {
       setError("Download failed. Please try again.");
     } finally {
@@ -117,7 +120,10 @@ function DownloaderContent() {
     if (!parseResult?.audio_url) { setError("No audio URL available. Please analyze the video first."); return; }
     setDownloading("mp3");
     try {
-      window.open(parseResult.audio_url, "_blank");
+      const a = document.createElement("a");
+      a.href = `/api/proxy?url=${encodeURIComponent(parseResult.audio_url)}`;
+      a.download = "audio.mp3";
+      a.click();
     } catch {
       setError("Download failed. Please try again.");
     } finally {
