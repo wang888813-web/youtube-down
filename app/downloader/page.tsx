@@ -84,10 +84,22 @@ function DownloaderContent() {
     }
   };
 
-  const handleDownloadUrl = (videoUrl: string, quality: string, key: string) => {
-    window.open(videoUrl, "_blank");
+  const handleDownloadUrl = async (videoUrl: string, quality: string, key: string) => {
     setDownloading(key);
-    setTimeout(() => setDownloading(null), 2000);
+    try {
+      const res = await fetch(`https://api.yttoolsbox.com/proxy?url=${encodeURIComponent(videoUrl)}`);
+      if (!res.ok) throw new Error("Failed");
+      const blob = await res.blob();
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `video-${quality}.mp4`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    } catch {
+      setError("Download failed. Please try again.");
+    } finally {
+      setDownloading(null);
+    }
   };
 
   const handleThumbDownload = async () => {
@@ -108,11 +120,23 @@ function DownloaderContent() {
     }
   };
 
-  const handleMp3Download = () => {
+  const handleMp3Download = async () => {
     if (!parseResult?.audio_url) { setError("No audio URL available. Please analyze the video first."); return; }
-    window.open(parseResult.audio_url, "_blank");
     setDownloading("mp3");
-    setTimeout(() => setDownloading(null), 2000);
+    try {
+      const res = await fetch(`https://api.yttoolsbox.com/proxy?url=${encodeURIComponent(parseResult.audio_url)}`);
+      if (!res.ok) throw new Error("Failed");
+      const blob = await res.blob();
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "audio.mp3";
+      a.click();
+      URL.revokeObjectURL(a.href);
+    } catch {
+      setError("Download failed. Please try again.");
+    } finally {
+      setDownloading(null);
+    }
   };
 
   // Filter formats: only show 720p and 1080p mp4
