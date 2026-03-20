@@ -15,13 +15,14 @@
   "/profile/page": "/profile",
   "/result/page": "/result",
   "/script/page": "/script",
-  "/zh/about/page": "/zh/about",
   "/terms/page": "/terms",
+  "/zh/about/page": "/zh/about",
   "/zh/disclaimer/page": "/zh/disclaimer",
   "/zh/pricing/page": "/zh/pricing",
   "/zh/page": "/zh",
   "/zh/privacy/page": "/zh/privacy",
   "/zh/result/page": "/zh/result",
   "/zh/script/page": "/zh/script",
+  "/zh/profile/page": "/zh/profile",
   "/zh/terms/page": "/zh/terms"
 }

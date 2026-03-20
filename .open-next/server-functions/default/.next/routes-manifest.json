@@ -118,6 +118,12 @@
       "namedRegex": "^/zh/privacy(?:/)?$"
     },
     {
+      "page": "/zh/profile",
+      "regex": "^/zh/profile(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/zh/profile(?:/)?$"
+    },
+    {
       "page": "/zh/result",
       "regex": "^/zh/result(?:/)?$",
       "routeKeys": {},

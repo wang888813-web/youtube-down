@@ -15,13 +15,14 @@
   "/profile/page": "app/profile/page.js",
   "/result/page": "app/result/page.js",
   "/script/page": "app/script/page.js",
-  "/zh/about/page": "app/zh/about/page.js",
   "/terms/page": "app/terms/page.js",
+  "/zh/about/page": "app/zh/about/page.js",
   "/zh/disclaimer/page": "app/zh/disclaimer/page.js",
   "/zh/pricing/page": "app/zh/pricing/page.js",
   "/zh/page": "app/zh/page.js",
   "/zh/privacy/page": "app/zh/privacy/page.js",
   "/zh/result/page": "app/zh/result/page.js",
   "/zh/script/page": "app/zh/script/page.js",
+  "/zh/profile/page": "app/zh/profile/page.js",
   "/zh/terms/page": "app/zh/terms/page.js"
 }
