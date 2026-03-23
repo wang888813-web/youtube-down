@@ -1,7 +1,7 @@
 "use client";
 import { useState, Suspense, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { Download, Music, Loader2, FileText, Scissors, Mic, Youtube, Shield, Zap, Star, Volume2, VolumeX, Image as ImageIcon } from "lucide-react";
+import { Download, Music, Loader2, FileText, Scissors, Mic, Youtube, Shield, Zap, Star, Volume2, Image as ImageIcon } from "lucide-react";
 import Link from "next/link";
 
 interface VideoFormat {
@@ -14,11 +14,30 @@ interface VideoFormat {
   separate: number;
 }
 
+interface Resolution {
+  value: string;
+  label: string;
+}
+
 interface ParseResult {
   title: string;
   preview_url: string;
+  thumbnail?: string;
+  duration?: number;
+  uploader?: string;
   formats: VideoFormat[];
   audio_url: string | null;
+  availableResolutions?: Resolution[];
+}
+
+interface DownloadJob {
+  status: "running" | "done" | "error";
+  progress: number;
+  file?: string;
+  filename?: string;
+  size?: number;
+  error?: string;
+  downloadUrl?: string;
 }
 
 const relatedTools = [
@@ -62,6 +81,7 @@ function DownloaderContent() {
   const [parseResult, setParseResult] = useState<ParseResult | null>(null);
   const [error, setError] = useState("");
   const [downloading, setDownloading] = useState<string | null>(null);
+  const [downloadProgress, setDownloadProgress] = useState(0);
 
   const handleParse = async () => {
     if (!url.trim()) return;
@@ -69,14 +89,20 @@ function DownloaderContent() {
     setError("");
     setParseResult(null);
     try {
-      const res = await fetch("https://api.yttoolsbox.com/parse", {
+      const res = await fetch("/api/parse", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url }),
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error || "Failed to parse video"); return; }
-      setParseResult(data);
+      // normalize preview_url
+      const result = { ...data, preview_url: data.preview_url || data.thumbnail };
+      setParseResult(result);
+      // set default resolution
+      if (result.availableResolutions?.length) {
+        // resolutions are already sorted desc by ytdl-site, e.g. 4K, 2K, 1080p...
+      }
     } catch {
       setError("Failed to parse video. Please try again.");
     } finally {
@@ -84,21 +110,59 @@ function DownloaderContent() {
     }
   };
 
-  const handleDownloadUrl = async (videoUrl: string, quality: string, key: string) => {
+  const pollJob = async (jobId: string, filename: string) => {
+    return new Promise<void>((resolve, reject) => {
+      const timer = setInterval(async () => {
+        try {
+          const res = await fetch(`/api/job/${jobId}`);
+          const job: DownloadJob = await res.json();
+          if (job.status === "running") {
+            setDownloadProgress(Math.min(99, job.progress || 0));
+          } else if (job.status === "done" && job.file) {
+            clearInterval(timer);
+            setDownloadProgress(100);
+            // Direct download from VPS (avoid CF Workers 128MB limit)
+            const downloadUrl = job.downloadUrl || `http://43.156.153.223:3000${job.file}`;
+            const a = document.createElement("a");
+            a.href = downloadUrl;
+            a.download = job.filename || filename;
+            a.target = "_blank";
+            a.rel = "noopener";
+            a.click();
+            resolve();
+          } else if (job.status === "error") {
+            clearInterval(timer);
+            reject(new Error(job.error || "Download failed"));
+          }
+        } catch {
+          clearInterval(timer);
+          reject(new Error("Failed to poll job status"));
+        }
+      }, 1000);
+    });
+  };
+
+  const handleDownloadVideo = async (resolution: string, audioOnly = false) => {
+    if (!url.trim()) return;
+    const key = audioOnly ? "mp3" : resolution;
     setDownloading(key);
+    setDownloadProgress(0);
+    setError("");
     try {
-      const res = await fetch(`https://api.yttoolsbox.com/proxy?url=${encodeURIComponent(videoUrl)}`);
-      if (!res.ok) throw new Error("Failed");
-      const blob = await res.blob();
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = `video-${quality}.mp4`;
-      a.click();
-      URL.revokeObjectURL(a.href);
-    } catch {
-      setError("Download failed. Please try again.");
+      const res = await fetch("/api/download", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url, resolution, format: "mp4", audioOnly }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to start download");
+      const fname = audioOnly ? "audio.mp3" : `video-${resolution}.mp4`;
+      await pollJob(data.jobId, fname);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Download failed. Please try again.");
     } finally {
       setDownloading(null);
+      setDownloadProgress(0);
     }
   };
 
@@ -106,7 +170,9 @@ function DownloaderContent() {
     if (!parseResult?.preview_url) return;
     setDownloading("thumb");
     try {
-      const res = await fetch(`/api/proxy?url=${encodeURIComponent(parseResult.preview_url)}`);
+      const thumbUrl = parseResult.preview_url || parseResult.thumbnail;
+      if (!thumbUrl) { setError("No thumbnail available"); return; }
+      const res = await fetch(`/api/proxy?url=${encodeURIComponent(thumbUrl)}`);
       if (!res.ok) { setError("Failed to download thumbnail"); return; }
       const blob = await res.blob();
       const a = document.createElement("a");
@@ -121,28 +187,22 @@ function DownloaderContent() {
   };
 
   const handleMp3Download = async () => {
-    if (!parseResult?.audio_url) { setError("No audio URL available. Please analyze the video first."); return; }
-    setDownloading("mp3");
-    try {
-      const res = await fetch(`https://api.yttoolsbox.com/proxy?url=${encodeURIComponent(parseResult.audio_url)}`);
-      if (!res.ok) throw new Error("Failed");
-      const blob = await res.blob();
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = "audio.mp3";
-      a.click();
-      URL.revokeObjectURL(a.href);
-    } catch {
-      setError("Download failed. Please try again.");
-    } finally {
-      setDownloading(null);
-    }
+    if (!parseResult) { setError("Please analyze the video first."); return; }
+    await handleDownloadVideo("", true);
   };
 
-  // Filter formats: only show 720p and 1080p mp4
-  const videoFormats = parseResult?.formats.filter(f =>
-    (f.quality === 720 || f.quality === 1080) && f.video_ext === "mp4"
-  ) || [];
+  // Build format list from availableResolutions
+  const videoFormats: VideoFormat[] = (parseResult?.availableResolutions || []).map(r => ({
+    quality: parseInt(r.value),
+    quality_note: r.label,
+    video_url: "",
+    video_ext: "mp4",
+    video_size: 0,
+    audio_url: null,
+    audio_ext: null,
+    audio_size: null,
+    separate: 1,
+  }));
 
   return (
     <div className="min-h-screen">
@@ -245,16 +305,15 @@ function DownloaderContent() {
                 {/* Format buttons */}
                 <div className="p-4 space-y-2">
                   {videoFormats.length === 0 && (
-                    <p className="text-gray-500 text-sm text-center py-2">No 720p/1080p MP4 formats available</p>
+                    <p className="text-gray-500 text-sm text-center py-2">No formats available</p>
                   )}
                   {videoFormats.map((f) => {
-                    const hasAudio = f.separate === 0 || !!f.audio_url;
-                    const key = `${f.quality}`;
+                    const key = f.quality_note.replace(/\s+/g, "-").toLowerCase();
                     const isLoading = downloading === key;
                     return (
                       <button
-                        key={f.quality}
-                        onClick={() => handleDownloadUrl(f.video_url, f.quality_note, key)}
+                        key={f.quality_note}
+                        onClick={() => handleDownloadVideo(f.quality_note.replace(/[^0-9p]/gi, "") || `${f.quality}p`, false)}
                         disabled={!!downloading}
                         className="w-full flex items-center justify-between bg-gray-800 hover:bg-gray-700 disabled:opacity-50 border border-gray-700 hover:border-gray-500 rounded-xl px-4 py-3 transition-all group"
                       >
@@ -265,49 +324,50 @@ function DownloaderContent() {
                             <Download className="w-4 h-4 text-gray-400 group-hover:text-white transition-colors" />
                           )}
                           <span className="text-white font-semibold text-sm">{f.quality_note}</span>
-                          <span className="text-gray-500 text-xs">{f.video_ext.toUpperCase()}</span>
-                          {f.video_size > 0 && (
-                            <span className="text-gray-500 text-xs">{formatSize(f.video_size)}</span>
-                          )}
+                          <span className="text-gray-500 text-xs">MP4</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          {hasAudio ? (
-                            <span className="flex items-center gap-1 text-green-400 text-xs">
-                              <Volume2 className="w-4 h-4" /> Audio
-                            </span>
-                          ) : (
-                            <span className="flex items-center gap-1 text-gray-500 text-xs">
-                              <VolumeX className="w-4 h-4" /> No Audio
-                            </span>
-                          )}
+                          <span className="flex items-center gap-1 text-green-400 text-xs">
+                            <Volume2 className="w-4 h-4" /> Audio
+                          </span>
                         </div>
                       </button>
                     );
                   })}
 
-                  {/* MP3 audio download if available */}
-                  {parseResult.audio_url && (
-                    <button
-                      onClick={() => handleMp3Download()}
-                      disabled={!!downloading}
-                      className="w-full flex items-center justify-between bg-gray-800 hover:bg-gray-700 disabled:opacity-50 border border-gray-700 hover:border-gray-500 rounded-xl px-4 py-3 transition-all group"
-                    >
-                      <div className="flex items-center gap-3">
-                        {downloading === "audio" ? <Loader2 className="w-4 h-4 animate-spin text-blue-400" /> : <Music className="w-4 h-4 text-blue-400" />}
-                        <span className="text-white font-semibold text-sm">Audio Only</span>
-                        <span className="text-gray-500 text-xs">M4A</span>
-                      </div>
-                      <Volume2 className="w-4 h-4 text-green-400" />
-                    </button>
-                  )}
+                  {/* MP3 audio download */}
+                  <button
+                    onClick={() => handleMp3Download()}
+                    disabled={!!downloading}
+                    className="w-full flex items-center justify-between bg-gray-800 hover:bg-gray-700 disabled:opacity-50 border border-gray-700 hover:border-gray-500 rounded-xl px-4 py-3 transition-all group"
+                  >
+                    <div className="flex items-center gap-3">
+                      {downloading === "mp3" ? <Loader2 className="w-4 h-4 animate-spin text-blue-400" /> : <Music className="w-4 h-4 text-blue-400" />}
+                      <span className="text-white font-semibold text-sm">Audio Only</span>
+                      <span className="text-gray-500 text-xs">MP3</span>
+                    </div>
+                    <Volume2 className="w-4 h-4 text-green-400" />
+                  </button>
                 </div>
               </div>
             )}
 
-            {downloading && downloading !== "mp3" && (
-              <div className="flex items-center gap-3 bg-yellow-500/10 border border-yellow-500/20 rounded-xl px-4 py-3 text-yellow-400 text-sm mt-4">
-                <Loader2 className="w-4 h-4 animate-spin shrink-0" />
-                <span>Downloading... Please keep this page open.</span>
+            {downloading && (
+              <div className="mt-4">
+                <div className="flex items-center gap-3 bg-yellow-500/10 border border-yellow-500/20 rounded-t-xl px-4 py-3 text-yellow-400 text-sm">
+                  <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+                  <span>Downloading... {downloadProgress > 0 ? `${downloadProgress.toFixed(1)}%` : "Starting..."} — Please keep this page open.</span>
+                </div>
+                {downloadProgress > 0 && (
+                  <div className="bg-gray-800/60 border border-yellow-500/20 border-t-0 rounded-b-xl px-4 py-2">
+                    <div className="bg-gray-700 rounded-full h-1.5 overflow-hidden">
+                      <div
+                        className="bg-gradient-to-r from-red-500 to-orange-400 h-full rounded-full transition-all duration-500"
+                        style={{ width: `${downloadProgress}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>

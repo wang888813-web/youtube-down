@@ -1,6 +1,9 @@
 {
   "version": 1,
   "functions": {
+    "/api/files/[...path]": {
+      "maxDuration": 300
+    },
     "/api/proxy": {
       "maxDuration": 300
     }
